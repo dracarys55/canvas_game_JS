@@ -5,6 +5,47 @@ window.addEventListener('load', function () {
   canvas.width = 1400;
   canvas.height = 600;
 
+  class InputHandler {
+    constructor(game) {
+      this.game = game;
+      // function 與 arrow function 的差別 this ?
+      window.addEventListener('keydown', (e) => {
+        if (
+          (e.key === 'ArrowUp' || e.key === 'ArrowDown') &&
+          this.game.keys.indexOf(e.key) === -1
+        ) {
+          this.game.keys.push(e.key);
+        } else if (e.key === ' ' || e.key === 'Spacebar') {
+          this.game.player.shootTop();
+        }
+      });
+      window.addEventListener('keyup', (e) => {
+        if (this.game.keys.indexOf(e.key) != -1) {
+          this.game.keys.splice(this.game.keys.indexOf(e.key), 1);
+        }
+      });
+    }
+  }
+  class Projectile {
+    constructor(game, x, y) {
+      this.game = game;
+      this.x = x;
+      this.y = y;
+      this.width = 10;
+      this.height = 3;
+      this.speed = 3;
+      this.markedForDeletion = false;
+    }
+    update() {
+      this.x += this.speed;
+      if (this.x > this.game.width * 0.8) this.markedForDeletion = true;
+    }
+    draw(context) {
+      context.fillStyle = 'yellow';
+      context.fillRect(this.x, this.y, this.width, this.height);
+    }
+  }
+
   class Player {
     constructor(game) {
       this.game = game;
@@ -12,13 +53,37 @@ window.addEventListener('load', function () {
       this.height = 190;
       this.x = 20;
       this.y = 100;
-      this.speedY = 0.2;
+      this.speedY = 0;
+      //玩家移動速度
+      this.maxSpeed = 5;
+      this.projectiles = [];
     }
     update() {
+      if (this.game.keys.includes('ArrowUp')) this.speedY = -this.maxSpeed;
+      else if (this.game.keys.includes('ArrowDown'))
+        this.speedY = this.maxSpeed;
+      else this.speedY = 0;
       this.y += this.speedY;
+      this.projectiles.forEach((projectile) => {
+        projectile.update();
+      });
+      this.projectiles = this.projectiles.filter(
+        (projectile) => !projectile.markedForDeletion
+      );
     }
     draw(context) {
+      context.fillStyle = 'black';
       context.fillRect(this.x, this.y, this.width, this.height);
+      this.projectiles.forEach((projectile) => {
+        projectile.draw(context);
+      });
+    }
+    shootTop() {
+      if (this.game.ammo > 0) {
+        this.projectiles.push(new Projectile(this.game, this.x, this.y + 30));
+        console.log(this.projectiles);
+        this.game.ammo--;
+      }
     }
   }
   class Enemy {}
@@ -30,6 +95,9 @@ window.addEventListener('load', function () {
       this.width = width;
       this.height = height;
       this.player = new Player(this);
+      this.input = new InputHandler(this);
+      this.keys = [];
+      this.ammo = 20;
     }
     update() {
       this.player.update();
@@ -41,10 +109,10 @@ window.addEventListener('load', function () {
   const game = new Game(canvas.width, canvas.height);
   // animation loop
   function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     game.update();
     game.draw(ctx);
     requestAnimationFrame(animate);
-    console.log('running animate');
   }
   animate();
 });
