@@ -81,38 +81,134 @@ window.addEventListener('load', function () {
     shootTop() {
       if (this.game.ammo > 0) {
         this.projectiles.push(new Projectile(this.game, this.x, this.y + 30));
-        console.log(this.projectiles);
         this.game.ammo--;
       }
     }
   }
-  class Enemy {}
+  class Enemy {
+    constructor(game) {
+      this.game = game;
+      this.x = this.game.width;
+      this.speedX = Math.random() * -1.5 - 0.5;
+      this.markedForDeletion = false;
+      this.lives = 5;
+      this.score = this.lives;
+    }
+    update() {
+      this.x += this.speedX;
+      if (this.x + this.width < 0) this.markedForDeletion = true;
+    }
+    draw(context) {
+      context.fillStyle = 'red';
+      context.fillRect(this.x, this.y, this.width, this.height);
+      context.fillStyle = 'black';
+      context.font = '20px Helvetica';
+      context.fillText(this.lives, this.x, this.y);
+    }
+  }
+  class Angler1 extends Enemy {
+    constructor(game) {
+      super(game); //make sure parent class excute constructor first, to get all properties
+      this.width = 228 * 0.3;
+      this.height = 169 * 0.3;
+      this.y = Math.random() * (this.game.height * 0.9 - this.height); //need to test it
+    }
+  }
   class Layer {}
   class Background {}
-  class UI {}
+  class UI {
+    constructor(game) {
+      this.game = game;
+      this.fontSize = 25;
+      this.fontFamily = 'Helvetica';
+      this.color = 'yello';
+    }
+    draw(context) {
+      //ammo
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillRect(20 + 5 * i, 50, 3, 20);
+      }
+    }
+  }
   class Game {
     constructor(width, height) {
       this.width = width;
       this.height = height;
       this.player = new Player(this);
       this.input = new InputHandler(this);
+      this.ui = new UI(this);
       this.keys = [];
+      this.enemies = [];
+      this.enemyTimer = 0;
+      this.enemyInterval = 1000;
       this.ammo = 20;
+      this.maxAmmo = 50;
+      this.ammoTimer = 0;
+      this.ammoInterval = 500;
+      this.gameOver = false;
     }
-    update() {
+    update(deltaTime) {
       this.player.update();
+      if (this.ammoTimer > this.ammoInterval) {
+        if (this.ammo < this.maxAmmo) this.ammo++;
+        this.ammoTimer = 0;
+      } else {
+        this.ammoTimer += deltaTime;
+      }
+      this.enemies.forEach((enemy) => {
+        enemy.update();
+        if (this.checkCollision(this.player, enemy)) {
+          enemy.markedForDeletion = true;
+        }
+        this.player.projectiles.forEach((projectile) => {
+          if (this.checkCollision(projectile, enemy)) {
+            enemy.lives--;
+            projectile.markedForDeletion = true;
+            if (enemy.lives <= 0) {
+              enemy.markedForDeletion = true;
+              this.score += enemy.score;
+            }
+          }
+        });
+      });
+      this.enemies = this.enemies.filter((enemy) => !enemy.markedForDeletion);
+      if (this.enemyTimer > this.enemyInterval && !this.gameOver) {
+        this.addEnemy();
+        this.enemyTimer = 0;
+      } else {
+        this.enemyTimer += deltaTime;
+      }
     }
     draw(context) {
       this.player.draw(context);
+      this.ui.draw(context);
+      this.enemies.forEach((enemy) => {
+        enemy.draw(context);
+      });
+    }
+    addEnemy() {
+      this.enemies.push(new Angler1(this));
+    }
+    checkCollision(rect1, rect2) {
+      return (
+        //還是不懂他到底如何計算的
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.height + rect1.y > rect2.y
+      );
     }
   }
   const game = new Game(canvas.width, canvas.height);
+  let lastTime = 0;
   // animation loop
-  function animate() {
+  function animate(timeStamp) {
+    const deltaTime = timeStamp - lastTime;
+    lastTime = timeStamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    game.update();
+    game.update(deltaTime);
     game.draw(ctx);
     requestAnimationFrame(animate);
   }
-  animate();
+  animate(0);
 });
