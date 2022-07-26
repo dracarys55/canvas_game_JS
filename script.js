@@ -309,7 +309,7 @@ window.addEventListener('load', function () {
       for (let i = 0; i < this.game.ammo; i++) {
         context.fillRect(20 + 5 * i, 50, 3, 20);
       }
-      /*    context.restore(); */
+      context.restore();
     }
   }
   class Game {
