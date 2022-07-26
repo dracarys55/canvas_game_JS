@@ -1,3 +1,7 @@
+import app from './app.js';
+let example = new app('baby');
+console.log(example.foo);
+
 window.addEventListener('load', function () {
   const canvas = document.getElementById('canvas1');
   const ctx = canvas.getContext('2d');
@@ -36,14 +40,14 @@ window.addEventListener('load', function () {
       this.height = 3;
       this.speed = 3;
       this.markedForDeletion = false;
+      this.image = document.getElementById('projectile');
     }
     update() {
       this.x += this.speed;
       if (this.x > this.game.width * 0.8) this.markedForDeletion = true;
     }
     draw(context) {
-      context.fillStyle = 'yellow';
-      context.fillRect(this.x, this.y, this.width, this.height);
+      context.drawImage(this.image, this.x, this.y);
     }
   }
 
@@ -258,7 +262,7 @@ window.addEventListener('load', function () {
     constructor(game) {
       this.game = game;
       this.fontSize = 25;
-      this.fontFamily = 'Helvetica';
+      this.fontFamily = 'Bangers';
       this.color = 'white';
     }
     draw(context) {
@@ -266,18 +270,15 @@ window.addEventListener('load', function () {
       context.save();
       context.fillStyle = this.color;
       context.shadowOffsetX = 2;
-      context.shadowOffsetXY = 2;
+      context.shadowOffsetY = 2;
       context.shadowColor = 'black';
-      context.fonnt = this.fontSize + 'px' + this.fontFamily;
+      //px need a space, very hard to see from debug mode
+      context.font = this.fontSize + 'px ' + this.fontFamily;
       //score
-      context.fillText('Score' + this.game.score, 20, 40);
-      //ammo
-      for (let i = 0; i < this.game.ammo; i++) {
-        context.fillRect(20 + 5 * i, 50, 3, 20);
-      }
+      context.fillText('Score : ' + this.game.score, 20, 40);
       //timer
       const formmatedTime = (this.game.gameTime * 0.001).toFixed(1);
-      context.fillText('Timer:' + formmatedTime, 20, 100);
+      context.fillText('Timer : ' + formmatedTime, 20, 100);
       //game over messege
       if (this.game.gameOver) {
         context.textAlign = 'center';
@@ -291,20 +292,24 @@ window.addEventListener('load', function () {
           message1 = 'You lose';
           message2 = 'try again~';
         }
-        context.font = '50px' + this.fontFamily;
+        context.font = '50px ' + this.fontFamily;
         context.fillText(
           message1,
           this.game.width * 0.5,
-          this.game.height * 0.5 - 40
+          this.game.height * 0.5 - 20
         );
-        context.font = '25px' + this.fontFamily;
+        context.font = '25px ' + this.fontFamily;
         context.fillText(
           message2,
           this.game.width * 0.5,
           this.game.height * 0.5 + 20
         );
       }
-      context.restore();
+      //ammo
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillRect(20 + 5 * i, 50, 3, 20);
+      }
+      /*    context.restore(); */
     }
   }
   class Game {
@@ -327,7 +332,7 @@ window.addEventListener('load', function () {
       this.score = 0;
       this.winningScore = 10;
       this.gameTime = 0;
-      this.timeLimit = 50000;
+      this.timeLimit = 5000;
       this.speed = 1;
       this.debug = true;
     }
@@ -372,8 +377,8 @@ window.addEventListener('load', function () {
     }
     draw(context) {
       this.background.draw(context);
-      this.player.draw(context);
       this.ui.draw(context);
+      this.player.draw(context);
       this.enemies.forEach((enemy) => {
         enemy.draw(context);
       });
