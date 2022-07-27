@@ -5,7 +5,7 @@ console.log(example.foo);
 window.addEventListener('load', function () {
   const canvas = document.getElementById('canvas1');
   const ctx = canvas.getContext('2d');
-  canvas.width = 1668;
+  canvas.width = 1200;
   canvas.height = 500;
 
   class InputHandler {
@@ -142,6 +142,46 @@ window.addEventListener('load', function () {
       this.game.ammo = this.game.maxAmmo;
     }
   }
+  class Particle {
+    constructor(game, x, y) {
+      this.game = game;
+      this.x = x;
+      this.y = y;
+      this.image = document.getElementById('gears');
+      this.frameX = Math.floor(Math.random() * 3);
+      this.frameY = Math.floor(Math.random() * 3);
+      this.spriteSize = 50;
+      this.sizeModifier = (Math.random() * 0.5 + 0.5).toFixed(1);
+      this.size = this.spriteSize * this.sizeModifier;
+      this.speedX = Math.random() * 6 - 3;
+      this.speedY = Math.random() * -15;
+      this.gravity = 0.5;
+      this.markedForDeletion = false;
+      this.angle = 0;
+      this.va = Math.random() * 0.2 - 0.1;
+    }
+    update() {
+      this.angle += this.va;
+      this.speedY += this.gravity;
+      this.x -= this.speedX + this.game.speed;
+      this.y += this.speedY;
+      if (this.y > this.game.height + this.size || this.x < 0 - this.size)
+        this.markedForDeletion = true;
+    }
+    draw(context) {
+      context.drawImage(
+        this.image,
+        this.frameX * this.spriteSize,
+        this.frameY * this.spriteSize,
+        this.spriteSize,
+        this.spriteSize,
+        this.x,
+        this.y,
+        this.size,
+        this.size
+      );
+    }
+  }
   class Enemy {
     constructor(game) {
       this.game = game;
@@ -149,7 +189,7 @@ window.addEventListener('load', function () {
       this.frameX = 0;
       this.frameY = 0;
       this.maxFrame = 37;
-      this.speedX = Math.random() * -1.5 - 0.5;
+      this.speedX = Math.random() * -30 - 0.5;
       this.markedForDeletion = false;
     }
     update() {
@@ -320,6 +360,7 @@ window.addEventListener('load', function () {
       this.player = new Player(this);
       this.input = new InputHandler(this);
       this.ui = new UI(this);
+      this.particles = [];
       this.keys = [];
       this.enemies = [];
       this.enemyTimer = 0;
@@ -330,9 +371,9 @@ window.addEventListener('load', function () {
       this.ammoInterval = 500;
       this.gameOver = false;
       this.score = 0;
-      this.winningScore = 10;
+      this.winningScore = 100;
       this.gameTime = 0;
-      this.timeLimit = 5000;
+      this.timeLimit = 50000000;
       this.speed = 1;
       this.debug = true;
     }
@@ -348,10 +389,23 @@ window.addEventListener('load', function () {
       } else {
         this.ammoTimer += deltaTime;
       }
+      this.particles.forEach((particle) => particle.update());
+      this.particles = this.particles.filter(
+        (particle) => !particle.markedForDeletion
+      );
       this.enemies.forEach((enemy) => {
         enemy.update();
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
+          for (let i = 0; i < 10; i++) {
+            this.particles.push(
+              new Particle(
+                this,
+                enemy.x + enemy.width * 0.5,
+                enemy.y + enemy.height * 0.5
+              )
+            );
+          }
           if (enemy.type === 'lucky') this.player.enterPowerUp();
           else this.score;
         }
@@ -359,8 +413,22 @@ window.addEventListener('load', function () {
           if (this.checkCollision(projectile, enemy)) {
             enemy.lives--;
             projectile.markedForDeletion = true;
+            this.particles.push(
+              new Particle(
+                this,
+                enemy.x + enemy.width * 0.5,
+                enemy.y + enemy.height * 0.5
+              )
+            );
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true;
+              this.particles.push(
+                new Particle(
+                  this,
+                  enemy.x + enemy.width * 0.5,
+                  enemy.y + enemy.height * 0.5
+                )
+              );
               if (!this.gameOver) this.score += enemy.score;
               if (this.score > this.winningScore) this.gameOver = true;
             }
@@ -379,6 +447,7 @@ window.addEventListener('load', function () {
       this.background.draw(context);
       this.ui.draw(context);
       this.player.draw(context);
+      this.particles.forEach((particle) => particle.draw(context));
       this.enemies.forEach((enemy) => {
         enemy.draw(context);
       });
