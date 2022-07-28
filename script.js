@@ -6,6 +6,8 @@ import Angler2 from './modules/Enemies/Angler2.js';
 import LuckyFish from './modules/Enemies/LuckyFish.js';
 import Background from './modules/UserInterface/Background.js';
 import UI from './modules/UserInterface/UI.js';
+import HiveWhale from './modules/Enemies/HiveWhale.js';
+import Drone from './modules/Enemies/Drone.js';
 
 window.addEventListener('load', function () {
   const canvas = document.getElementById('canvas1');
@@ -58,7 +60,7 @@ window.addEventListener('load', function () {
         enemy.update();
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < enemy.score; i++) {
             this.particles.push(
               new Particle(
                 this,
@@ -74,24 +76,35 @@ window.addEventListener('load', function () {
           if (this.checkCollision(projectile, enemy)) {
             enemy.lives--;
             projectile.markedForDeletion = true;
-            for (let i = 0; i < 5; i++) {
-              this.particles.push(
-                new Particle(
-                  this,
-                  enemy.x + enemy.width * 0.5,
-                  enemy.y + enemy.height * 0.5
-                )
-              );
-            }
+            this.particles.push(
+              new Particle(
+                this,
+                enemy.x + enemy.width * 0.5,
+                enemy.y + enemy.height * 0.5
+              )
+            );
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true;
-              this.particles.push(
-                new Particle(
-                  this,
-                  enemy.x + enemy.width * 0.5,
-                  enemy.y + enemy.height * 0.5
-                )
-              );
+              for (let i = 0; i < enemy.score; i++) {
+                this.particles.push(
+                  new Particle(
+                    this,
+                    enemy.x + enemy.width * 0.5,
+                    enemy.y + enemy.height * 0.5
+                  )
+                );
+              }
+              if (enemy.type === 'hive') {
+                for (let i = 0; i < 5; i++) {
+                  this.enemies.push(
+                    new Drone(
+                      this,
+                      enemy.x + Math.random() * enemy.width,
+                      enemy.y + Math.random() * enemy.height * 1
+                    )
+                  );
+                }
+              }
               if (!this.gameOver) this.score += enemy.score;
               if (this.score > this.winningScore) this.gameOver = true;
             }
@@ -120,6 +133,7 @@ window.addEventListener('load', function () {
       const randomize = Math.random();
       if (randomize < 0.3) this.enemies.push(new Angler1(this));
       else if (randomize < 0.6) this.enemies.push(new Angler2(this));
+      else if (randomize < 0.8) this.enemies.push(new HiveWhale(this));
       else this.enemies.push(new LuckyFish(this));
     }
     checkCollision(rect1, rect2) {
