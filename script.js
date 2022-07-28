@@ -139,7 +139,9 @@ window.addEventListener('load', function () {
     enterPowerUp() {
       this.powerUpTimer = 0;
       this.powerUp = true;
-      this.game.ammo = this.game.maxAmmo;
+
+      if (this.game.ammo < this.game.maxAmmo)
+        this.game.ammo = this.game.maxAmmo;
     }
   }
   class Particle {
@@ -159,6 +161,8 @@ window.addEventListener('load', function () {
       this.markedForDeletion = false;
       this.angle = 0;
       this.va = Math.random() * 0.2 - 0.1;
+      this.bounced = false;
+      this.bottomBounceBoundary = Math.random() * 100 + 60;
     }
     update() {
       this.angle += this.va;
@@ -167,6 +171,13 @@ window.addEventListener('load', function () {
       this.y += this.speedY;
       if (this.y > this.game.height + this.size || this.x < 0 - this.size)
         this.markedForDeletion = true;
+      if (
+        this.y > this.game.height - this.bottomBounceBoundary &&
+        !this.bounced
+      ) {
+        this.bounced = true;
+        this.speedY *= -0.5;
+      }
     }
     draw(context) {
       context.drawImage(
@@ -375,7 +386,7 @@ window.addEventListener('load', function () {
       this.gameTime = 0;
       this.timeLimit = 50000000;
       this.speed = 1;
-      this.debug = true;
+      this.debug = false;
     }
     update(deltaTime) {
       if (!this.gameOver) this.gameTime += deltaTime;
@@ -413,13 +424,15 @@ window.addEventListener('load', function () {
           if (this.checkCollision(projectile, enemy)) {
             enemy.lives--;
             projectile.markedForDeletion = true;
-            this.particles.push(
-              new Particle(
-                this,
-                enemy.x + enemy.width * 0.5,
-                enemy.y + enemy.height * 0.5
-              )
-            );
+            for (let i = 0; i < 5; i++) {
+              this.particles.push(
+                new Particle(
+                  this,
+                  enemy.x + enemy.width * 0.5,
+                  enemy.y + enemy.height * 0.5
+                )
+              );
+            }
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true;
               this.particles.push(
