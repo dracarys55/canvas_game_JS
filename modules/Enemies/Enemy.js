@@ -20,7 +20,12 @@ export default class Enemy {
     }
   }
   draw(context) {
-    if (this.debug) context.strokeRect(this.x, this.y, this.width, this.height);
+    if (this.game.debug) {
+      context.strokeRect(this.x, this.y, this.width, this.height);
+      context.fillStyle = 'black';
+      context.font = '20px Helvetica';
+      context.fillText(this.lives, this.x, this.y);
+    }
     context.drawImage(
       this.image,
       this.frameX * this.width,
@@ -32,8 +37,5 @@ export default class Enemy {
       this.width,
       this.height
     );
-    context.fillStyle = 'black';
-    context.font = '20px Helvetica';
-    context.fillText(this.lives, this.x, this.y);
   }
 }
