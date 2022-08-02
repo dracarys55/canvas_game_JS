@@ -11,6 +11,6 @@ export default class HiveWhale extends Enemy {
     this.lives = 15;
     this.score = this.lives;
     this.type = 'hive';
-    this.speedX = Math.random() * -1.2 - 0.2;
+    this.speedX = Math.random() * -3 - 0.2;
   }
 }

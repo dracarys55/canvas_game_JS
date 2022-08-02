@@ -10,6 +10,7 @@ import HiveWhale from './modules/Enemies/HiveWhale.js';
 import Drone from './modules/Enemies/Drone.js';
 import SmokeExpolosion from './modules/Explosion/SmokeExpolosion.js';
 import FireExplosion from './modules/Explosion/FireExplosion.js';
+import SoundControler from './modules/SoundControler.js';
 
 window.addEventListener('load', function () {
   const canvas = document.getElementById('canvas1');
@@ -25,14 +26,15 @@ window.addEventListener('load', function () {
       this.player = new Player(this);
       this.input = new InputHandler(this);
       this.ui = new UI(this);
+      this.soundControler = new SoundControler();
       this.particles = [];
       this.keys = [];
       this.enemies = [];
       this.explosions = [];
       this.enemyTimer = 0;
       this.enemyInterval = 1000;
-      this.ammo = 20;
-      this.maxAmmo = 50;
+      this.ammo = 10;
+      this.maxAmmo = 20;
       this.ammoTimer = 0;
       this.ammoInterval = 500;
       this.gameOver = false;
@@ -68,6 +70,7 @@ window.addEventListener('load', function () {
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
           this.addExplosion(enemy);
+          this.soundControler.enterHit();
           for (let i = 0; i < enemy.score; i++) {
             this.particles.push(
               new Particle(
@@ -84,6 +87,7 @@ window.addEventListener('load', function () {
           if (this.checkCollision(projectile, enemy)) {
             enemy.lives--;
             projectile.markedForDeletion = true;
+            this.soundControler.entershot();
             this.particles.push(
               new Particle(
                 this,
@@ -94,6 +98,7 @@ window.addEventListener('load', function () {
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true;
               this.addExplosion(enemy);
+              this.soundControler.enterExplosion();
               for (let i = 0; i < enemy.score; i++) {
                 this.particles.push(
                   new Particle(
