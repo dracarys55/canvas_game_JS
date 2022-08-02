@@ -8,6 +8,8 @@ import Background from './modules/UserInterface/Background.js';
 import UI from './modules/UserInterface/UI.js';
 import HiveWhale from './modules/Enemies/HiveWhale.js';
 import Drone from './modules/Enemies/Drone.js';
+import SmokeExpolosion from './modules/Explosion/SmokeExpolosion.js';
+import FireExplosion from './modules/Explosion/FireExplosion.js';
 
 window.addEventListener('load', function () {
   const canvas = document.getElementById('canvas1');
@@ -26,6 +28,7 @@ window.addEventListener('load', function () {
       this.particles = [];
       this.keys = [];
       this.enemies = [];
+      this.explosions = [];
       this.enemyTimer = 0;
       this.enemyInterval = 1000;
       this.ammo = 20;
@@ -56,10 +59,15 @@ window.addEventListener('load', function () {
       this.particles = this.particles.filter(
         (particle) => !particle.markedForDeletion
       );
+      this.explosions.forEach((explosion) => explosion.update(deltaTime));
+      this.explosions = this.explosions.filter(
+        (explosion) => !explosion.markedForDeletion
+      );
       this.enemies.forEach((enemy) => {
         enemy.update();
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
+          this.addExplosion(enemy);
           for (let i = 0; i < enemy.score; i++) {
             this.particles.push(
               new Particle(
@@ -85,6 +93,7 @@ window.addEventListener('load', function () {
             );
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true;
+              this.addExplosion(enemy);
               for (let i = 0; i < enemy.score; i++) {
                 this.particles.push(
                   new Particle(
@@ -127,6 +136,9 @@ window.addEventListener('load', function () {
       this.enemies.forEach((enemy) => {
         enemy.draw(context);
       });
+      this.explosions.forEach((explosion) => {
+        explosion.draw(context);
+      });
       this.background.layer4.draw(context);
     }
     addEnemy() {
@@ -135,6 +147,26 @@ window.addEventListener('load', function () {
       else if (randomize < 0.6) this.enemies.push(new Angler2(this));
       else if (randomize < 0.8) this.enemies.push(new HiveWhale(this));
       else this.enemies.push(new LuckyFish(this));
+    }
+    addExplosion(enemy) {
+      const randomize = Math.random();
+      if (randomize < 0.5) {
+        this.explosions.push(
+          new SmokeExpolosion(
+            this,
+            enemy.x + enemy.width * 0.5,
+            enemy.y + enemy.height * 0.5
+          )
+        );
+      } else {
+        this.explosions.push(
+          new FireExplosion(
+            this,
+            enemy.x + enemy.width * 0.5,
+            enemy.y + enemy.height * 0.5
+          )
+        );
+      }
     }
     checkCollision(rect1, rect2) {
       return (
@@ -153,8 +185,8 @@ window.addEventListener('load', function () {
     const deltaTime = timeStamp - lastTime;
     lastTime = timeStamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    game.update(deltaTime);
     game.draw(ctx);
+    game.update(deltaTime);
     requestAnimationFrame(animate);
   }
   animate(0);

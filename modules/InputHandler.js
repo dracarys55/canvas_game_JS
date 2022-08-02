@@ -8,7 +8,9 @@ export default class InputHandler {
         this.game.keys.indexOf(e.key) === -1
       ) {
         this.game.keys.push(e.key);
-        document.getElementById('cyber_race').play();
+        const backGroundMusic = document.getElementById('cyber_race');
+        backGroundMusic.volume = 0.2;
+        backGroundMusic.play();
       } else if (e.key === ' ' || e.key === 'Spacebar') {
         this.game.player.shootTop();
       } else if (e.key === 'd') {
