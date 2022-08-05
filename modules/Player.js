@@ -16,6 +16,7 @@ export default class Player {
     this.projectiles = [];
     this.image = document.getElementById('player');
     this.powerUp = false;
+    this.powerUpMaxAmmo = 25;
     this.powerUpTimer = 0;
     this.powerUpLimit = 10000;
   }
@@ -49,7 +50,7 @@ export default class Player {
       } else {
         this.powerUpTimer += deltaTime;
         this.frameY = 1;
-        this.game.ammo += 0.1;
+        if (this.game.ammo < this.powerUpMaxAmmo) this.game.ammo += 0.1;
       }
     }
   }
