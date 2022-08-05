@@ -25,7 +25,6 @@ export default class UI {
       let message1;
       let message2;
       if (this.game.score > this.game.winningScore) {
-        //字體大小是一樣的 請排查
         message1 = 'You win';
         message2 = 'well done!';
       } else {
@@ -45,7 +44,12 @@ export default class UI {
         this.game.height * 0.5 + 20
       );
     }
-    //ammo
+    // ammo
+    if (this.game.player.powerUp) {
+      context.fillStyle = '#FF4D00';
+      context.shadowOffsetX = 3;
+      context.shadowOffsetY = 3;
+    }
     for (let i = 0; i < this.game.ammo; i++) {
       context.fillRect(20 + 5 * i, 50, 3, 20);
     }
